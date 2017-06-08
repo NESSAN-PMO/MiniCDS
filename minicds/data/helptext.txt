@@ -1,0 +1,18 @@
+				MiniCDS HELP
+				==============
+
+MiniCDS is a regular http server. You visit below url with your favorite browser.
+The aim of this server is provide a collection of cds service for scamp users
+with local copy of star catalogues.
+
+At the present times you can get stars from UCAC4 catalogue.
+
+URL syntax:
+
+Help:
+	http://host:port/
+	http://host:port/help
+
+This URL is used to mimic CDS a server output as needed by SCAMP astroref catalog
+	http://host:port/viz-bin/aserver.cgi
+
