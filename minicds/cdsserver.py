@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 from __future__ import unicode_literals
 from future.standard_library import install_aliases
 install_aliases()
@@ -14,14 +13,12 @@ from socketserver import ThreadingMixIn
 import threading
 from math import sqrt
 import re
+from astropy import log
 
 from .config import *
 cfg=dict(config.items("DEFAULT"))
 
-f = open( os.devnull, 'w' )
-#sys.stderr = f
-
-#To use include server_address=<IP> line in your main.cfg
+log.setLevel( "DEBUG" )
 try:
     HOST_NAME = cfg['host'] 
 except:
@@ -39,11 +36,11 @@ def UCAC4Cat( ra,dec,r,magmin,magmax,maxstars ):
     except:
         cat = UCAC4() 
     if not cat.valid:
-        print( "UCAC-4 local copy is not valid now.", file=sys.stderr )
+        log.error( "UCAC-4 local copy is not valid now." )
         return "UCAC-4 local copy is not valid now."
     cat.extract_ucac4_stars( ra, dec, r*2, r*2 )
 
-    print("RA/DEC/r:",ra,dec,r,"MIN/MAX MAG:",magmin,magmax,"MAXSTARS:",maxstars,file=sys.stderr)
+    log.debug("RA/DEC/r: {:f} {:f} {:f}, MIN/MAX MAG: {:f} {:f}, MAXSTARS: {:d}".format(ra,dec,r,magmin,magmax,maxstars))
     if magmin != 99 or magmax != -99:
         data=cat.data[(cat.data['mag1']<=magmin) & (cat.data['mag1']>=magmax)]
     else:
@@ -83,7 +80,7 @@ def UCAC4Cat( ra,dec,r,magmin,magmax,maxstars ):
         line.append(";")
         lines.append( "|".join( line ) )
 
-    print(time.time() - t1, 's',file=sys.stderr)
+    log.info( "Using {:f} s".format( time.time() - t1 ) )
     lines.append("")
     out = '\n'.join( lines )
 
@@ -100,16 +97,14 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         """Respond to a GET request."""
         services_cmd={'help':self.help,'viz-bin/aserver.cgi':self.minicds}
         service=urlparse(self.path).path[1:]
-        #print service
         qs = parse_qs(urlparse(self.path).query)
         services=list(services_cmd.keys())
-        #print services
         if service not in services:
             services_cmd['help'](qs)
             return
         if service=='viz-bin/aserver.cgi':
             #Special handler to mimic UCAC4 vizier server import re
-            print("VIZ:",urlparse(self.path).query,file=sys.stderr)
+            log.debug("VIZ:{:s}".format(urlparse(self.path).query))
             response=services_cmd[service](urlparse(self.path).query)
         else:
             response=services_cmd[service](qs)
@@ -124,9 +119,9 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(bytes(data,"utf-8"))
 
     def minicds(self,params):
-        print(params,file=sys.stderr)	
+        log.debug(params)	
         params=params.split('&')
-        print(params,file=sys.stderr)	
+        log.debug(params)	
 
         magmin = 99
         magmax = -99
@@ -177,9 +172,9 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
 
         self.send_header("Content-type",contentType)
         self.end_headers()
-        print("START SENDING",size,file=sys.stderr)
+        log.debug("START SENDING {:d}".format(size))
         self.wfile.write(bytes(data,"utf-8"))
-        print("END SENDING",file=sys.stderr)
+        log.debug("END SENDING.")
 
 class ThreadedHTTPServer(ThreadingMixIn,http.server.HTTPServer):
     """Handle requests in a separate thread."""
@@ -189,11 +184,11 @@ def main():
     server_class = ThreadedHTTPServer
     httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
     httpd.daemon=True	
-    print(time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER),file=sys.stderr)
+    log.info( "{:s} Server Starts - {:s}:{:d}".format(time.asctime(), HOST_NAME, PORT_NUMBER))
 
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     httpd.server_close()
-    print(time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER),file=sys.stderr)
+    log.info("{:s} Server Stops - {:s}:{:d}".format(time.asctime(), HOST_NAME, PORT_NUMBER))
