@@ -14,25 +14,20 @@ import threading
 from math import sqrt
 import re
 from astropy import log
+from . import conf
 
-from .config import *
-cfg=dict(config.items("DEFAULT"))
+log.setLevel( conf.loglevel )
 
-log.setLevel( "DEBUG" )
-try:
-    HOST_NAME = cfg['host'] 
-except:
-    HOST_NAME = ''
+HOST_NAME = conf.host
 
-PORT_NUMBER = int(cfg['server_port']) # Maybe set this to 9000.
+PORT_NUMBER = int( conf.server_port )
 
 def UCAC4Cat( ra,dec,r,magmin,magmax,maxstars ):
 
     from refcat import UCAC4
         
     try:
-        cfg = dict( config.items("UCAC4") )
-        cat = UCAC4( path = cfg['datadir'] )
+        cat = UCAC4( path = conf.ucac4_path )
     except:
         cat = UCAC4() 
     if not cat.valid:
@@ -47,10 +42,6 @@ def UCAC4Cat( ra,dec,r,magmin,magmax,maxstars ):
         data = cat.data
     data.sort( 'mag1' )
     data = data[:maxstars]
-    '''
-    Special output to mimic CDS Strasbourg server output
-    as need by scamp refcatlog.
-    '''
     lines = []
     lines.append( "#======== UCAC4 server (2017-06-05, V0.1) ======== PMO mini CDS, Nanjing ========" )
     lines.append( "#Center: {:8.4f} {:8.4f}".format( ra, dec ) )
@@ -94,7 +85,6 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        """Respond to a GET request."""
         services_cmd={'help':self.help,'viz-bin/aserver.cgi':self.minicds}
         service=urlparse(self.path).path[1:]
         qs = parse_qs(urlparse(self.path).query)
@@ -103,7 +93,6 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
             services_cmd['help'](qs)
             return
         if service=='viz-bin/aserver.cgi':
-            #Special handler to mimic UCAC4 vizier server import re
             log.debug("VIZ:{:s}".format(urlparse(self.path).query))
             response=services_cmd[service](urlparse(self.path).query)
         else:
@@ -180,7 +169,6 @@ class ThreadedHTTPServer(ThreadingMixIn,http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
 def main():
-    #server_class = BaseHTTPServer.HTTPServer
     server_class = ThreadedHTTPServer
     httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
     httpd.daemon=True	

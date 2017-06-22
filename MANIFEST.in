@@ -6,6 +6,8 @@ include ah_bootstrap.py
 include setup.cfg
 include minicds/tests/coveragerc
 
+include minicds/minicds.cfg
+
 recursive-include minicds *.pyx *.c *.pxd
 recursive-include docs *
 recursive-include licenses *

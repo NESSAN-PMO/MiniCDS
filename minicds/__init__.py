@@ -15,3 +15,20 @@ if not _ASTROPY_SETUP_:
 
     pass
 
+from astropy import config as _config
+class Conf( _config.ConfigNamespace ):
+
+    host = _config.ConfigItem(
+            '0.0.0.0',
+            'Listening this address.' )
+    server_port = _config.ConfigItem(
+            9000,
+            'Listening this port.' )
+    loglevel = _config.ConfigItem(
+            "DEBUG",
+            "Log level of astropy logging system." )
+    ucac4_path = _config.ConfigItem(
+            "/data/catalog/ucac4/u4b"
+            'UCAC4 data file location' )
+
+conf = Conf()
