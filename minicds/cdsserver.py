@@ -33,7 +33,7 @@ def UCAC4Cat( ra,dec,r,magmin,magmax,maxstars ):
     if not cat.valid:
         log.error( "UCAC-4 local copy is not valid now." )
         return "UCAC-4 local copy is not valid now."
-    cat.extract_ucac4_stars( ra, dec, r*2, r*2 )
+    cat.extract( ra, dec, r*2, r*2 )
 
     log.debug("RA/DEC/r: {:f} {:f} {:f}, MIN/MAX MAG: {:f} {:f}, MAXSTARS: {:d}".format(ra,dec,r,magmin,magmax,maxstars))
     if magmin != 99 or magmax != -99:
